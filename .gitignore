@@ -1,3 +1,5 @@
 .build
 tests/test-matrix
 tests/test-stopwatch
+.*
+*.dSYM

@@ -1,7 +1,7 @@
 #include "matrix.h"
 #include <stdio.h>
 
-MatrixAlgo *matrix_providers[] = {                                                                                                                
+MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
 };
 
@@ -9,37 +9,42 @@ int main()
 {
     MatrixAlgo *algo = matrix_providers[0];
 
-    Matrix dst, m, n, fixed;
-    algo->assign(&m, (Mat4x4) {
-        .values = {
-            { 1, 2, 3, 4, },
-            { 5, 6, 7, 8, },
-            { 1, 2, 3, 4, },
-            { 5, 6, 7, 8, },
-        },
-    });
+    float A[4][4] = {
+        { 1, 2, 3, 4, },
+        { 5, 6, 7, 8, },
+        { 1, 2, 3, 4, },
+        { 5, 6, 7, 8, },
+    };
 
-    algo->assign(&n, (Mat4x4) {
-        .values = {
-            { 1, 2, 3, 4, },
-            { 5, 6, 7, 8, },
-            { 1, 2, 3, 4, },
-            { 5, 6, 7, 8, },
-        },
-    });
+    float B[4][4] = {
+        { 1, 2, 3, 4, },
+        { 5, 6, 7, 8, },
+        { 1, 2, 3, 4, },
+        { 5, 6, 7, 8, },
+    };
 
-    algo->mul(&dst, &m, &n);
+    float C[4][4] = {
+        { 34,  44,  54,  64, },
+        { 82, 108, 134, 160, },
+        { 34,  44,  54,  64, },
+        { 82, 108, 134, 160, },
+    };
 
-    algo->assign(&fixed, (Mat4x4) {
-        .values = {
-            { 34,  44,  54,  64, },
-            { 82, 108, 134, 160, },
-            { 34,  44,  54,  64, },
-            { 82, 108, 134, 160, },
-        },
-    });
 
-    if (algo->equal(&dst, &fixed))
+    Matrix *dst, *m, *n, *fixed;
+
+    dst = algo->new_Matrix(4, 4);
+    m = algo->new_Matrix(4, 4);
+    n = algo->new_Matrix(4, 4);
+    fixed = algo->new_Matrix(4, 4);
+
+    algo->assign(m, &A[0][0], 4, 4);
+    algo->assign(n, &B[0][0], 4, 4);
+    algo->assign(fixed, &C[0][0], 4, 4);
+
+    algo->mul(dst, m, n);
+
+    if (algo->equal(dst, fixed))
         return 0;
     return -1;
 }
