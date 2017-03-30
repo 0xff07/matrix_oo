@@ -33,10 +33,10 @@ int main()
 
     Matrix *dst, *m, *n, *fixed;
 
-    dst = algo->new_Matrix(4, 4);
-    m = algo->new_Matrix(4, 4);
-    n = algo->new_Matrix(4, 4);
-    fixed = algo->new_Matrix(4, 4);
+    dst = algo->create(4, 4);
+    m = algo->create(4, 4);
+    n = algo->create(4, 4);
+    fixed = algo->create(4, 4);
 
     algo->assign(m, &A[0][0], 4, 4);
     algo->assign(n, &B[0][0], 4, 4);

@@ -9,7 +9,7 @@
     ((float**) ((x)->priv))
 
 /* malloc and make float **ret can use ret[i][j] to access data. */
-float** malltrix (int row, int col)
+static float** matrix_alloc(int row, int col)
 {
     int idx_size = row * sizeof(float*);
     int data_size = row * col * sizeof(float*);
@@ -24,12 +24,12 @@ float** malltrix (int row, int col)
     return ret;
 }
 
-Matrix* new_Matrix(int row, int col)
+static Matrix* create(int row, int col)
 {
     Matrix *ret = (Matrix*)malloc(sizeof(Matrix));
     ret->row = row;
     ret->col = col;
-    ret -> priv = malltrix(row, col);
+    ret -> priv = matrix_alloc(row, col);
     return ret;
 }
 
@@ -69,7 +69,7 @@ bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
 
     assert(l_col == r->row);
 
-    dst->priv = malltrix(l_row, r_col);
+    dst->priv = matrix_alloc(l_row, r_col);
     for (int i = 0; i < l_row; i++)
         for (int j = 0; j < r_col; j++)
             for (int k = 0; k < l_col; k++)
@@ -77,7 +77,7 @@ bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
     return true;
 }
 
-void print_Matrix(const Matrix *a)
+static void dump(const Matrix *a)
 {
     int row = a->row;
     int col = a->col;
@@ -90,9 +90,9 @@ void print_Matrix(const Matrix *a)
 }
 
 MatrixAlgo NaiveMatrixProvider = {
-    .new_Matrix = new_Matrix,
+    .create = create,
     .assign = assign,
     .equal = equal,
     .mul = mul,
-    .print_Matrix = print_Matrix
+    .dump = dump
 };

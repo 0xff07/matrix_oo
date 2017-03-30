@@ -15,11 +15,11 @@ typedef struct {
 } Matrix;
 
 typedef struct {
-    Matrix* (*new_Matrix)(int row, int col);
+    Matrix *(*create)(int row, int col);
     void (*assign)(Matrix *thiz, float* that, int row, int col);
     bool (*equal)(const Matrix *l, const Matrix *r);
     bool (*mul)(Matrix *dst, const Matrix *l, const Matrix *r);
-    void (*print_Matrix)(const Matrix *a);
+    void (*dump)(const Matrix *a);
 } MatrixAlgo;
 
 /* Available matrix providers */
