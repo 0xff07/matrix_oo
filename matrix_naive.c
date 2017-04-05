@@ -35,11 +35,9 @@ static Matrix* create(int row, int col)
 
 static void matrix_free(Matrix *thiz)
 {
-    if(thiz) {
-        if((thiz->priv))
-            free(thiz->priv);
-        free(thiz);
-    }
+    if(!thiz) return;
+    free(thiz->priv);
+    free(thiz);
 }
 
 static void assign(Matrix *thiz, float* that, int row, int col)
@@ -124,7 +122,7 @@ MatrixAlgo NaiveMatrixProvider = {
     .equal = equal,
     .mul = mul,
     .dump = dump,
-    .matrix_free = matrix_free
+    .free = matrix_free
 };
 
 MatrixAlgo RowMajorMatrixProvider = {
@@ -133,5 +131,5 @@ MatrixAlgo RowMajorMatrixProvider = {
     .equal = equal,
     .mul = row_major_mul,
     .dump = dump,
-    .matrix_free = matrix_free
+    .free = matrix_free
 };

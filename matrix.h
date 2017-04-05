@@ -20,7 +20,7 @@ typedef struct {
     bool (*equal)(const Matrix *l, const Matrix *r);
     bool (*mul)(Matrix *dst, const Matrix *l, const Matrix *r);
     void (*dump)(const Matrix *a);
-    void (*matrix_free) (Matrix *thiz);
+    void (*free) (Matrix *thiz);
 } MatrixAlgo;
 
 /* Available matrix providers */

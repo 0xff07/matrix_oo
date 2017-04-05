@@ -49,9 +49,9 @@ int main()
         else {
             printf("%dth matrix provider failed.\n", i);
         }
-        algo->matrix_free(dst);
-        algo->matrix_free(m);
-        algo->matrix_free(n);
-        algo->matrix_free(fixed);
+        algo->free(dst);
+        algo->free(m);
+        algo->free(n);
+        algo->free(fixed);
     }
 }
