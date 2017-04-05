@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
-
+#include <immintrin.h>
 
 #define PRIV(x) \
     ((float**) ((x)->priv))
@@ -68,7 +68,7 @@ static bool equal(const Matrix *l, const Matrix *r)
     return true;
 }
 
-bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
+static bool naive_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
     /* FIXME: error hanlding */
     int l_row = l->row, l_col = l->col;
@@ -84,7 +84,7 @@ bool mul(Matrix *dst, const Matrix *l, const Matrix *r)
     return true;
 }
 
-bool row_major_mul(Matrix *dst, const Matrix *l, const Matrix *r)
+static bool row_major_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
     /* FIXME: error hanlding */
     int l_row = l->row, l_col = l->col;
@@ -104,6 +104,37 @@ bool row_major_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 }
 
 
+static bool avx_mul(Matrix *dst, const Matrix *l, const Matrix *r)
+{
+    /* FIXME: error hanlding */
+    int l_row = l->row, l_col = l->col;
+    int r_row = r->row, r_col = r->col;
+
+    assert(l_col == r->row);
+
+    free(dst->priv);
+    dst->priv = matrix_alloc(l_row, r_col);
+    for (int i = 0; i < l_col; i++) {
+        for (int j = 0; j < l_row; j++) {
+            float coeff = PRIV(l)[i][j];
+            int lower = r_col & 7;
+            int upper = r_col - lower;
+            for (int k = 0; k + 8 < upper; k+=8) {
+                __m256 ymm0 = _mm256_loadu_ps(&PRIV(r)[j][k]);
+                __m256 ymm1 = _mm256_set1_ps(coeff);
+                __m256 ymm2 = _mm256_loadu_ps(&PRIV(dst)[i][k]);
+                ymm0 = _mm256_mul_ps(ymm0, ymm1);
+                ymm2 = _mm256_add_ps(ymm0, ymm2);
+                _mm256_storeu_ps(&PRIV(dst)[i][k], ymm2);
+            }
+            for (int k = upper; k < r_col; k++) {
+                PRIV(dst)[i][k] += coeff * PRIV(r)[j][k];
+            }
+        }
+    }
+    return true;
+}
+
 static void dump(const Matrix *a)
 {
     int row = a->row;
@@ -120,7 +151,7 @@ MatrixAlgo NaiveMatrixProvider = {
     .create = create,
     .assign = assign,
     .equal = equal,
-    .mul = mul,
+    .mul = naive_mul,
     .dump = dump,
     .free = matrix_free
 };
@@ -130,6 +161,15 @@ MatrixAlgo RowMajorMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = row_major_mul,
+    .dump = dump,
+    .free = matrix_free
+};
+
+MatrixAlgo AVXMatrixProvider = {
+    .create = create,
+    .assign = assign,
+    .equal = equal,
+    .mul = avx_mul,
     .dump = dump,
     .free = matrix_free
 };

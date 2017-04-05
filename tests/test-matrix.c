@@ -3,7 +3,8 @@
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
-    &RowMajorMatrixProvider
+    &RowMajorMatrixProvider,
+    &AVXMatrixProvider
 };
 
 int main()
@@ -30,7 +31,7 @@ int main()
     };
 
     MatrixAlgo *algo;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         algo = matrix_providers[i];
         Matrix *dst, *m, *n, *fixed;
         dst = algo->create(4, 4);
@@ -48,6 +49,10 @@ int main()
             printf("%dth matrix provider succeeded.\n", i);
         else {
             printf("%dth matrix provider failed.\n", i);
+            printf("expect : \n");
+            algo->dump(fixed);
+            printf("actuel : \n");
+            algo->dump(dst);
         }
         algo->free(dst);
         algo->free(m);
