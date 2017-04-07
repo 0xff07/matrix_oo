@@ -1,19 +1,21 @@
 #include "matrix.h"
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <immintrin.h>
+#include <string.h>
+#include <malloc.h>
 
 #define PRIV(x) \
     ((float**) ((x)->priv))
 
 /* malloc and make float **ret can use ret[i][j] to access data. */
-static float** matrix_alloc(int row, int col)
+static float **matrix_alloc(int row, int col)
 {
     int idx_size = row * sizeof(float*);
     int data_size = row * col * sizeof(float*);
-    void* ret = calloc(idx_size + data_size, sizeof(char));
+    void* ret = memalign(32, idx_size + data_size);
+    memset(ret, 0, idx_size + data_size);
 
     float** idx = (float**)ret;
     float* data = (float*)((char*)ret + idx_size);
@@ -24,7 +26,7 @@ static float** matrix_alloc(int row, int col)
     return ret;
 }
 
-static Matrix* create(int row, int col)
+static Matrix *create(int row, int col)
 {
     Matrix *ret = (Matrix*)malloc(sizeof(Matrix));
     ret->row = row;
@@ -93,8 +95,8 @@ static bool row_major_mul(Matrix *dst, const Matrix *l, const Matrix *r)
     assert(l_col == r->row);
 
     dst->priv = matrix_alloc(l_row, r_col);
-    for (int i = 0; i < l_col; i++) {
-        for (int j = 0; j < l_row; j++) {
+    for (int i = 0; i < l_row; i++) {
+        for (int j = 0; j < l_col; j++) {
             float coeff = PRIV(l)[i][j];
             for (int k = 0; k < r_col; k++)
                 PRIV(dst)[i][k] += coeff * PRIV(r)[j][k];
@@ -114,18 +116,22 @@ static bool avx_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 
     free(dst->priv);
     dst->priv = matrix_alloc(l_row, r_col);
-    for (int i = 0; i < l_col; i++) {
-        for (int j = 0; j < l_row; j++) {
+    for (int i = 0; i < l_row; i++) {
+        for (int j = 0; j < l_col; j++) {
             float coeff = PRIV(l)[i][j];
             int lower = r_col & 7;
             int upper = r_col - lower;
-            for (int k = 0; k + 8 < upper; k+=8) {
-                __m256 ymm0 = _mm256_loadu_ps(&PRIV(r)[j][k]);
-                __m256 ymm1 = _mm256_set1_ps(coeff);
-                __m256 ymm2 = _mm256_loadu_ps(&PRIV(dst)[i][k]);
-                ymm0 = _mm256_mul_ps(ymm0, ymm1);
-                ymm2 = _mm256_add_ps(ymm0, ymm2);
-                _mm256_storeu_ps(&PRIV(dst)[i][k], ymm2);
+            for (int k = 0; k + 8 <= upper; k+=8) {
+                __m256 ymm0;
+                __m256 ymm1;
+                __m256 ymm2;
+                __m256 ymm3;
+                ymm0 = _mm256_loadu_ps(&(PRIV(r)[j][k]));
+                ymm1 = _mm256_set1_ps(coeff);
+                ymm2 = _mm256_loadu_ps(&(PRIV(dst)[i][k]));
+                ymm3 = _mm256_fmadd_ps(ymm0, ymm1, ymm2);
+                _mm256_storeu_ps((float *)(&(PRIV(dst)[i][k])), ymm3);
+
             }
             for (int k = upper; k < r_col; k++) {
                 PRIV(dst)[i][k] += coeff * PRIV(r)[j][k];
@@ -141,7 +147,7 @@ static void dump(const Matrix *a)
     int col = a->col;
     for(int i = 0; i < row; i++) {
         for(int j = 0; j < col; j++)
-            printf("%6.3f", ((float**)(a->priv))[i][j]);
+            printf("%6.3f  ", ((float**)(a->priv))[i][j]);
         printf("\n");
     }
     printf("\n");
