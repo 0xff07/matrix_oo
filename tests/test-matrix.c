@@ -1,10 +1,13 @@
 #include "matrix.h"
+#include "stopwatch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-const int m_row_size = 100;
-const int col_row_size = 99;
-const int n_col_size = 17;
+
+#define m_row_size 800
+#define col_row_size 800
+#define n_col_size 800
+#define range 1000
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
@@ -14,18 +17,23 @@ MatrixAlgo *matrix_providers[] = {
 
 int main()
 {
+    watch_p watch = Stopwatch.create();
+    double mul_time[3] = {0};
+
     srand(time(NULL));
     float A[m_row_size][col_row_size];
     float B[col_row_size][n_col_size];
 
+    /* initialize arrays */
     for (int i = 0; i < m_row_size; i++)
         for (int j = 0; j < col_row_size; j++)
-            A[i][j] = (float)(rand() % 100);
+            A[i][j] = range - (float)(rand() % (2*range));
 
     for (int i = 0; i < col_row_size; i++)
         for(int j = 0; j < n_col_size; j++)
-            B[i][j] = (float)(rand() % 100);
+            B[i][j] = range - (float)(rand() % (2*range));
 
+    /* use naive algorithm as answer */
     MatrixAlgo *algo = matrix_providers[0];
     Matrix *m, *n, *ans;
     m = algo->create(m_row_size, col_row_size);
@@ -33,17 +41,27 @@ int main()
     algo->assign(m, &A[0][0], m_row_size, col_row_size);
     algo->assign(n, &B[0][0], col_row_size, n_col_size);
     ans = algo->create(m_row_size, n_col_size);
-    algo->mul(ans, m, n);
 
+    /* evaluate time of naive mul */
+    Stopwatch.start(watch);
+    algo->mul(ans, m, n);
+    Stopwatch.stop(watch);
+    mul_time[0] += Stopwatch.read(watch);
+    Stopwatch.reset(watch);
+
+    /* test different version */
     for (int i = 1; i < 3; i++) {
         algo = matrix_providers[i];
         Matrix *dst;
         dst = algo->create(m_row_size, n_col_size);
-        algo->mul(dst, m, n);
 
-        if (algo->equal(dst, ans))
-            printf("%dth matrix provider succeeded.\n", i);
-        else {
+        Stopwatch.start(watch);
+        algo->mul(dst, m, n);
+        Stopwatch.stop(watch);
+        mul_time[i] += Stopwatch.read(watch);
+        Stopwatch.reset(watch);
+
+        if(!(algo->equal(dst, ans))) {
             printf("%dth matrix provider failed.\n", i);
             printf("A : \n");
             algo->dump(m);
@@ -56,6 +74,7 @@ int main()
         }
         algo->free(dst);
     }
+    printf("%5.3f %5.3f %5.3f\n", mul_time[0], mul_time[1], mul_time[2]);
     algo->free(m);
     algo->free(n);
     algo->free(ans);

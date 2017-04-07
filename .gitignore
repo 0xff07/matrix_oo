@@ -3,3 +3,5 @@ tests/test-matrix
 tests/test-stopwatch
 .*
 *.dSYM
+*.txt
+*.png

@@ -38,8 +38,19 @@ check: $(EXEC)
 		echo "Execute $$test..." ; $$test && echo "OK!\n" ; \
 	done
 
+gendata: $(EXEC)
+	echo "naive row_major avx_row_major" > "fix-sized-time.txt";\
+	for i in `seq 1 1 100`; \
+	do \
+		tests/test-matrix >> "fix-sized-time.txt";\
+	done
+
+plot: gendata
+	gnuplot scripts/plot/plot.gp
+
 clean:
 	$(RM) $(EXEC) $(OBJS) $(deps)
 	@rm -rf $(OUT)
+	rm -f *.txt *.png
 
 -include $(deps)
