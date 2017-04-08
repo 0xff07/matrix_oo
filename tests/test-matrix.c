@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define m_row_size 800
-#define col_row_size 800
-#define n_col_size 800
-#define range 1000
+#define m_row_size 1025
+#define col_row_size 1025
+#define n_col_size 1025
+#define range 100000
 
 MatrixAlgo *matrix_providers[] = {
     &NaiveMatrixProvider,
@@ -20,26 +20,13 @@ int main()
     watch_p watch = Stopwatch.create();
     double mul_time[3] = {0};
 
-    srand(time(NULL));
-    float A[m_row_size][col_row_size];
-    float B[col_row_size][n_col_size];
-
-    /* initialize arrays */
-    for (int i = 0; i < m_row_size; i++)
-        for (int j = 0; j < col_row_size; j++)
-            A[i][j] = range - (float)(rand() % (2*range));
-
-    for (int i = 0; i < col_row_size; i++)
-        for(int j = 0; j < n_col_size; j++)
-            B[i][j] = range - (float)(rand() % (2*range));
-
     /* use naive algorithm as answer */
     MatrixAlgo *algo = matrix_providers[0];
     Matrix *m, *n, *ans;
     m = algo->create(m_row_size, col_row_size);
     n = algo->create(col_row_size, n_col_size);
-    algo->assign(m, &A[0][0], m_row_size, col_row_size);
-    algo->assign(n, &B[0][0], col_row_size, n_col_size);
+    algo->fill(m, range);
+    algo->fill(n, range);
     ans = algo->create(m_row_size, n_col_size);
 
     /* evaluate time of naive mul */

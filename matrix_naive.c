@@ -70,6 +70,17 @@ static bool equal(const Matrix *l, const Matrix *r)
     return true;
 }
 
+static void fill (Matrix *thiz, int range)
+{
+    assert(thiz);
+    assert(thiz->priv);
+
+    srand(time(NULL));
+    for (int i = 0; i < thiz->row; i++)
+        for(int j = 0; j < thiz->col; j++)
+            PRIV(thiz)[i][j] = range - (float)(rand() % (2*range));
+}
+
 static bool naive_mul(Matrix *dst, const Matrix *l, const Matrix *r)
 {
     /* FIXME: error hanlding */
@@ -158,6 +169,7 @@ MatrixAlgo NaiveMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = naive_mul,
+    .fill = fill,
     .dump = dump,
     .free = matrix_free
 };
@@ -167,6 +179,7 @@ MatrixAlgo RowMajorMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = row_major_mul,
+    .fill = fill,
     .dump = dump,
     .free = matrix_free
 };
@@ -176,6 +189,7 @@ MatrixAlgo AVXMatrixProvider = {
     .assign = assign,
     .equal = equal,
     .mul = avx_mul,
+    .fill = fill,
     .dump = dump,
     .free = matrix_free
 };
